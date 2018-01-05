@@ -22,7 +22,7 @@ NEWSPIDER_MODULE = 'RecruitSpider.spiders'
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 100
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -33,7 +33,7 @@ ROBOTSTXT_OBEY = True
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -64,8 +64,8 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'RecruitSpider.pipelines.RecruitspiderPipeline': 300,
+# ITEM_PIPELINES = {
+#     'RecruitSpider.pipelines.ZhilianspiderPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -88,3 +88,29 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+#日志输出控制(DEBUG<INFO<WARNING<ERROR<CRITICAL)
+LOG_LEVEL = 'INFO'
+#重试关闭
+RETRY_ENABLED = False
+#下载超时
+DOWNLOAD_TIMEOUT = 15
+#重定向关闭
+REDIRECT_ENABLED = False
+#下载延迟
+DOWMLOAD_DELY=3
+#暂停或恢复爬虫
+JOB_DIR='/Users/yexianyong/Desktop/reptile/recruit_spider_job_dir'
+
+# COOKIES_ENABLED=False
+COOKIES_DEBUG=True
+#并发数量
+CONCURRENT_REQUESTS = 200
+
+#数据库配置
+MYSQL_HOST = "localhost"
+MYSQL_DBNAME = "zhilian"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "123456"
+
