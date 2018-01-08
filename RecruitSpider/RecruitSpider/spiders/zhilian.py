@@ -46,11 +46,11 @@ class ZhilianSpider(scrapy.Spider):
         yield Request(url=start_url, callback=self.parse)
 
     def parse(self, response):
+        print(response)
         parse_obj=urlparse(response.url)
         path_list=parse_obj.path.split('/')
         self.current_city_index=self.cities.index(path_list[1])
-        self.current_page=int(path_list[2][-1])
-
+        self.current_page=int(path_list[2][1:])
         # 当前城市已完毕，下一个城市
         if self.current_page == 100:
             self.current_page = 1
@@ -71,13 +71,15 @@ class ZhilianSpider(scrapy.Spider):
             job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
             yield Request(url=job_url, callback=self.parse_job_detail)
 
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
-        self.log(''.format('------------------->',response,self.current_city_index,self.current_page))
+
+
 
     def parse_job_detail(self,response):
-        print(response)
+        # print(response)
 
+        # from scrapy.shell import inspect_response
+        # inspect_response(response, self)
+        pass
 
 
 
