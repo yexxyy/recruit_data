@@ -17,12 +17,10 @@ class ZhilianSpider(scrapy.Spider):
     # start_urls = ['http://jobs.zhaopin.com/']
 
     custom_settings = {
-        'ITEM_PIPELINES': {
-            'RecruitSpider.pipelines.ZhilianspiderPipeline': 300,
-        },
+
     }
     cities = tool.get_city_pinyin()
-    current_city_index = 422
+    current_city_index = 0
     current_page = 1
 
     def start_requests(self):
@@ -36,13 +34,19 @@ class ZhilianSpider(scrapy.Spider):
         if self.current_page == 100:
             self.current_page = 1
             self.current_city_index += 1
+
+            if self.current_city_index < len(self.cities):
+                temp_url = urllib_parse.urljoin(self.base_url,
+                                                self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
+                yield Request(url=temp_url, callback=self.parse)
         else:
             self.current_page += 1
-        if self.current_city_index < len(self.cities):
             temp_url = urllib_parse.urljoin(self.base_url,
                                             self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
             yield Request(url=temp_url, callback=self.parse)
-            # raise CloseSpider(reason='智联爬取完毕...')
+        # raise CloseSpider(reason='智联爬取完毕...')
+        # from scrapy.shell import inspect_response
+        # inspect_response(response, self)
         print(response)
 
 
@@ -51,5 +55,4 @@ class ZhilianSpider(scrapy.Spider):
 
 
 
-        # from scrapy.shell import inspect_response
-        # inspect_response(response, self)
+

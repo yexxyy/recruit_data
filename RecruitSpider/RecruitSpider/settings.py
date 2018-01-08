@@ -27,7 +27,7 @@ CONCURRENT_REQUESTS = 100
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -64,9 +64,9 @@ COOKIES_ENABLED = False
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#     'RecruitSpider.pipelines.ZhilianspiderPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'RecruitSpider.pipelines.ZhilianspiderPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -98,8 +98,7 @@ RETRY_ENABLED = False
 DOWNLOAD_TIMEOUT = 15
 #重定向关闭
 REDIRECT_ENABLED = False
-#下载延迟
-DOWMLOAD_DELY=3
+
 #暂停或恢复爬虫
 JOB_DIR='/Users/yexianyong/Desktop/reptile/recruit_spider_job_dir'
 
