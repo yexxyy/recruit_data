@@ -3,7 +3,7 @@
 # Created by yetongxue<yeli.studio@qq.com> on 2018/1/5 14:58
 
 from sqlalchemy import create_engine
-
+from RecruitSpider import settings
 
 def get_city_pinyin():
 	import pinyin
@@ -17,7 +17,7 @@ def get_city_pinyin():
 
 
 def execute_sql(sql_str):
-	engine = create_engine('mysql://root:123456@localhost:3306/zhilian?charset=utf8', echo=False)
+	engine = create_engine('mysql://{}:{}@{}:3306/{}?charset=utf8'.format(settings.MYSQL_USER,settings.MYSQL_PASSWORD,settings.MYSQL_HOST,settings.MYSQL_DBNAME), echo=False)
 	conn = engine.connect()
 	result = conn.execute(sql_str)
 	result = result.fetchall()
