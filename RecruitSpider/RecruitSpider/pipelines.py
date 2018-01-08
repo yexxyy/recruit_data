@@ -28,6 +28,7 @@ class RecruitspiderPipeline(object):
         return cls(dbpool)
 
     def process_item(self, item, spider):
+        print(item)
         return item
 
     def open_spider(self, spider):

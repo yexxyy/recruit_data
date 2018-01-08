@@ -10,7 +10,9 @@ from scrapy.exceptions import CloseSpider
 from RecruitSpider.tools import tool
 from urllib.parse import urlparse
 from urllib import parse as urllib_parse
-
+from RecruitSpider.items import *
+from scrapy.loader import ItemLoader
+import time
 
 class ZhilianSpider(scrapy.Spider):
     name = 'zhilian'
@@ -19,7 +21,7 @@ class ZhilianSpider(scrapy.Spider):
     # start_urls = ['http://jobs.zhaopin.com/']
 
     custom_settings = {
-        'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
+        # 'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
     }
     cities = tool.get_city_pinyin()
     current_city_index = 0
@@ -34,10 +36,10 @@ class ZhilianSpider(scrapy.Spider):
         return spider
 
     def spider_close(self):
-        print('爬虫已关闭',self.current_city_index,self.current_page)
+        print('爬虫已关闭')
 
     def spider_open(self):
-        print('爬虫已开始',self.current_city_index,self.current_page,self.state)
+        print('爬虫已开始')
 
 
     def start_requests(self):
@@ -75,12 +77,40 @@ class ZhilianSpider(scrapy.Spider):
 
 
     def parse_job_detail(self,response):
-        # print(response)
-
-        # from scrapy.shell import inspect_response
+        print(response)
+        from scrapy.shell import inspect_response
         # inspect_response(response, self)
-        pass
+        # zhilian_job
+        item_loader=ItemLoader(item=RecruitspiderItem,response=response)
+        item_loader.add_xpath('name',"//div[@class='top-fixed-box']/div/div/h1/text()")
+        label=response.xpath("//div[@class='top-fixed-box']//div[@class='welfare-tab-box']/span/text()").extract()
+        item_loader.add_value('label',label)
+        
+        item_loader.add_xpath('salary_low',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
+        item_loader.add_xpath('salary_high',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
+        item_loader.add_xpath('city',"//ul/li/span[text()='工作地点：']/following-sibling::*/a/text()")
+        item_loader.add_xpath('publish_date',"/ul/li/span[text()='发布日期：']/following-sibling::*/span/text()")
+        item_loader.add_xpath('nature',"//ul/li/span[text()='工作性质：']/following-sibling::*/text()")
+        item_loader.add_xpath('work_years',"//ul/li/span[text()='工作经验：']/following-sibling::*/text()")
+        item_loader.add_xpath('education',"//ul/li/span[text()='最低学历：']/following-sibling::*/text()")
+        item_loader.add_xpath('recruit_num',"//ul/li/span[text()='招聘人数：']/following-sibling::*/text()")
+        item_loader.add_xpath('category',"//ul/li/span[text()='职位类别：']/following-sibling::*/a/text()")
+        item_loader.add_value('url',response.url)
+        
 
+
+        # zhilian_company
+        item_loader.add_xpath('com_logo', "//div[@class='company-box']/p[@class='img-border']/a/img/@src")
+        item_loader.add_xpath('com_md5',"//div[@class='company-box']/p/a/text()")
+        item_loader.add_xpath('com_name',"//div[@class='company-box']/p/a/text()")
+        item_loader.add_xpath('com_scale',"//div[@class='company-box']/ul/li/span[text()='公司规模：']/following-sibling::*/text()")
+        item_loader.add_xpath('com_nature',"//div[@class='company-box']/ul/li/span[text()='公司性质：']/following-sibling::*/text()")
+        item_loader.add_xpath('com_industry',"//div[@class='company-box']/ul/li/span[text()='公司行业：']/following-sibling::*/a/text()")
+        item_loader.add_xpath('com_website',"//div[@class='company-box']/ul/li/span[text()='公司主页：']/following-sibling::*/a/@href")
+        item_loader.add_xpath('com_address',"//div[@class='company-box']/ul/li/span[text()='公司地址：']/following-sibling::*/text()")
+
+        item_loader.add_value('created_at', time.strftime('%Y-%m-%d %H:%M:%S'))
+        yield item_loader.load_item()
 
 
 
