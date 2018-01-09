@@ -22,6 +22,7 @@ class RecruitspiderPipeline(object):
             user=settings['MYSQL_USER'],
             passwd=settings['MYSQL_PASSWORD'],
             charset='utf8',
+            cursorclass=MySQLdb.cursors.DictCursor,
             use_unicode=True,
         )
         dbpool = adbapi.ConnectionPool('MySQLdb', **dbargs)
@@ -32,12 +33,14 @@ class RecruitspiderPipeline(object):
         return item
 
     def open_spider(self, spider):
-        print('Come on baby,the sipder is opening')
+        print('Pipelines: Sipder is opening')
 
     def close_spider(self, spider):
-        print('Spider has closed')
+        print('Pipelines: Spider has closed')
     
-        
+    def handle_error(self,failure,item,spider):
+        print(failure)
+
 
 
 
@@ -46,7 +49,13 @@ class RecruitspiderPipeline(object):
 
 class ZhilianspiderPipeline(RecruitspiderPipeline):
     def process_item(self, item, spider):
+        print(item)
+        query=self.dbpool.runInteraction(self.do_insert_company,item)
+        query.addErrback(self.handle_error,item,spider)
         return item
     
     
-    
+    def do_insert_company(self,cursor,item):
+        insert_sql,values=item.zhilian_com_insert_sql()
+        cursor.execute(insert_sql,values)
+        

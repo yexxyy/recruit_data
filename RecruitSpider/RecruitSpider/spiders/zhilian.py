@@ -11,7 +11,6 @@ from RecruitSpider.tools import tool
 from urllib.parse import urlparse
 from urllib import parse as urllib_parse
 from RecruitSpider.items import *
-from scrapy.loader import ItemLoader
 import time
 
 class ZhilianSpider(scrapy.Spider):
@@ -22,6 +21,7 @@ class ZhilianSpider(scrapy.Spider):
 
     custom_settings = {
         # 'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
+        
     }
     cities = tool.get_city_pinyin()
     current_city_index = 0
@@ -81,10 +81,10 @@ class ZhilianSpider(scrapy.Spider):
         from scrapy.shell import inspect_response
         # inspect_response(response, self)
         # zhilian_job
-        item_loader=ItemLoader(item=RecruitspiderItem,response=response)
+        item_loader=BaseItemLoader(item=RecruitspiderItem(),response=response)
         item_loader.add_xpath('name',"//div[@class='top-fixed-box']/div/div/h1/text()")
         label=response.xpath("//div[@class='top-fixed-box']//div[@class='welfare-tab-box']/span/text()").extract()
-        item_loader.add_value('label',label)
+        item_loader.add_value('label',','.join(label))
         
         item_loader.add_xpath('salary_low',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
         item_loader.add_xpath('salary_high',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
@@ -97,20 +97,21 @@ class ZhilianSpider(scrapy.Spider):
         item_loader.add_xpath('category',"//ul/li/span[text()='职位类别：']/following-sibling::*/a/text()")
         item_loader.add_value('url',response.url)
         
-
-
         # zhilian_company
-        item_loader.add_xpath('com_logo', "//div[@class='company-box']/p[@class='img-border']/a/img/@src")
+        com_logo=response.xpath("//div[@class='company-box']/p[@class='img-border']/a/img/@src").extract_first()
+        item_loader.add_value('com_logo', com_logo if com_logo else 'NULL')
         item_loader.add_xpath('com_md5',"//div[@class='company-box']/p/a/text()")
         item_loader.add_xpath('com_name',"//div[@class='company-box']/p/a/text()")
         item_loader.add_xpath('com_scale',"//div[@class='company-box']/ul/li/span[text()='公司规模：']/following-sibling::*/text()")
         item_loader.add_xpath('com_nature',"//div[@class='company-box']/ul/li/span[text()='公司性质：']/following-sibling::*/text()")
         item_loader.add_xpath('com_industry',"//div[@class='company-box']/ul/li/span[text()='公司行业：']/following-sibling::*/a/text()")
-        item_loader.add_xpath('com_website',"//div[@class='company-box']/ul/li/span[text()='公司主页：']/following-sibling::*/a/@href")
+        com_website=response.xpath("//div[@class='company-box']/ul/li/span[text()='公司主页：']/following-sibling::*/a/@href").extract_first()
+        item_loader.add_value('com_website',com_website if com_website else 'NULL')
         item_loader.add_xpath('com_address',"//div[@class='company-box']/ul/li/span[text()='公司地址：']/following-sibling::*/text()")
-
         item_loader.add_value('created_at', time.strftime('%Y-%m-%d %H:%M:%S'))
-        yield item_loader.load_item()
+        
+        item=item_loader.load_item()
+        yield item
 
 
 
