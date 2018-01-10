@@ -8,7 +8,7 @@
 
 import MySQLdb.cursors
 from twisted.enterprise import adbapi
-
+import redis
 
 class RecruitspiderPipeline(object):
     def __init__(self, dbpool):

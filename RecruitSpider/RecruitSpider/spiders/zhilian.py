@@ -73,7 +73,7 @@ class ZhilianSpider(scrapy.Spider):
             job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
             yield Request(url=job_url, callback=self.parse_job_detail)
 
-
+    
 
 
     def parse_job_detail(self,response):
