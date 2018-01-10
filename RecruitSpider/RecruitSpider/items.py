@@ -27,22 +27,52 @@ def get_md5(value):
 		md5_obj=hashlib.md5()
 		md5_obj.update(value)
 		return md5_obj.hexdigest()
+	
+def get_salary_high(value):
+	#'8001-10000元/月\xa0',
+	m=re.match('(\d+)-(\d+)',value)
+	return m.group(2)
+
+def get_salary_low(value):
+	m=re.match('(\d+)-(\d+)',value)
+	return m.group(1)
+
+def handle_recruit_num(value):
+	m=re.match(r"\d+",value)
+	if m:
+		return m.group(0)
+	else:
+		return 0
 
 class RecruitspiderItem(scrapy.Item):
 	# zhilian_job
 	name = scrapy.Field()
 	city = scrapy.Field()
-	salary_low = scrapy.Field()
-	salary_high = scrapy.Field()
-	location = scrapy.Field()
+	salary_low = scrapy.Field(
+		input_processor=MapCompose(get_salary_low)
+	)
+	salary_high = scrapy.Field(
+		input_processor=MapCompose(get_salary_high)
+	)
+	location = scrapy.Field(
+		input_processor=MapCompose(remove_blank)
+	)
 	publish_date = scrapy.Field()
 	label = scrapy.Field()
 	nature = scrapy.Field()
 	work_years = scrapy.Field()
 	education = scrapy.Field()
-	recruit_num = scrapy.Field()
+	recruit_num = scrapy.Field(
+		input_processor=MapCompose(handle_recruit_num)
+	)
 	category = scrapy.Field()
 	url = scrapy.Field()
+	md5= scrapy.Field(
+		input_processor=MapCompose(get_md5)
+	)
+	content=scrapy.Field(
+		input_processor=MapCompose(remove_blank)
+	)
 	
 	# zhilian_company
 	com_md5 = scrapy.Field(

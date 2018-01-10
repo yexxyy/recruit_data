@@ -33,7 +33,7 @@ class RecruitspiderPipeline(object):
         return item
 
     def open_spider(self, spider):
-        print('Pipelines: Sipder is opening')
+        print('Pipelines: Sipder is starting')
 
     def close_spider(self, spider):
         print('Pipelines: Spider has closed')
@@ -44,14 +44,13 @@ class RecruitspiderPipeline(object):
 
 
 
-
-
-
 class ZhilianspiderPipeline(RecruitspiderPipeline):
     def process_item(self, item, spider):
         print(item)
-        query=self.dbpool.runInteraction(self.do_insert_company,item)
-        query.addErrback(self.handle_error,item,spider)
+        query_company=self.dbpool.runInteraction(self.do_insert_company,item)
+        query_company.addErrback(self.handle_error,item,spider)
+        query_job=self.dbpool.runInteraction(self.do_insert_job,item)
+        query_job.addErrback(self.handle_error,item,spider)
         return item
     
     
@@ -59,3 +58,6 @@ class ZhilianspiderPipeline(RecruitspiderPipeline):
         insert_sql,values=item.zhilian_com_insert_sql()
         cursor.execute(insert_sql,values)
         
+    def do_insert_job(self,cursor,item):
+        insert_sql,values=item.zhilian_job_insert_sql()
+        cursor.execute(insert_sql,values)

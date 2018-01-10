@@ -82,26 +82,32 @@ class ZhilianSpider(scrapy.Spider):
         # inspect_response(response, self)
         # zhilian_job
         item_loader=BaseItemLoader(item=RecruitspiderItem(),response=response)
-        item_loader.add_xpath('name',"//div[@class='top-fixed-box']/div/div/h1/text()")
+        name=response.xpath("//div[@class='top-fixed-box']/div/div/h1/text()").extract_first()
+        item_loader.add_value('name',name)
         label=response.xpath("//div[@class='top-fixed-box']//div[@class='welfare-tab-box']/span/text()").extract()
-        item_loader.add_value('label',','.join(label))
-        
+        item_loader.add_value('label',','.join(label) if label else "NULL")
         item_loader.add_xpath('salary_low',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
         item_loader.add_xpath('salary_high',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
         item_loader.add_xpath('city',"//ul/li/span[text()='工作地点：']/following-sibling::*/a/text()")
-        item_loader.add_xpath('publish_date',"/ul/li/span[text()='发布日期：']/following-sibling::*/span/text()")
+        publist_date=response.xpath("//ul/li/span[text()='发布日期：']/following-sibling::*/span/text()").extract_first()
+        item_loader.add_value('publish_date',publist_date)
         item_loader.add_xpath('nature',"//ul/li/span[text()='工作性质：']/following-sibling::*/text()")
         item_loader.add_xpath('work_years',"//ul/li/span[text()='工作经验：']/following-sibling::*/text()")
         item_loader.add_xpath('education',"//ul/li/span[text()='最低学历：']/following-sibling::*/text()")
         item_loader.add_xpath('recruit_num',"//ul/li/span[text()='招聘人数：']/following-sibling::*/text()")
         item_loader.add_xpath('category',"//ul/li/span[text()='职位类别：']/following-sibling::*/a/text()")
         item_loader.add_value('url',response.url)
+        content=response.xpath("//div[@class='tab-inner-cont']/p/text()").extract()
+        item_loader.add_value('content',','.join(content))
+        item_loader.add_xpath('location',"//div[@class='tab-inner-cont']/b[text()='工作地址：']/following-sibling::*/text()")
+        
         
         # zhilian_company
         com_logo=response.xpath("//div[@class='company-box']/p[@class='img-border']/a/img/@src").extract_first()
         item_loader.add_value('com_logo', com_logo if com_logo else 'NULL')
         item_loader.add_xpath('com_md5',"//div[@class='company-box']/p/a/text()")
-        item_loader.add_xpath('com_name',"//div[@class='company-box']/p/a/text()")
+        com_name=response.xpath("//div[@class='company-box']/p/a/text()").extract_first()
+        item_loader.add_value('com_name',com_name)
         item_loader.add_xpath('com_scale',"//div[@class='company-box']/ul/li/span[text()='公司规模：']/following-sibling::*/text()")
         item_loader.add_xpath('com_nature',"//div[@class='company-box']/ul/li/span[text()='公司性质：']/following-sibling::*/text()")
         item_loader.add_xpath('com_industry',"//div[@class='company-box']/ul/li/span[text()='公司行业：']/following-sibling::*/a/text()")
@@ -109,6 +115,9 @@ class ZhilianSpider(scrapy.Spider):
         item_loader.add_value('com_website',com_website if com_website else 'NULL')
         item_loader.add_xpath('com_address',"//div[@class='company-box']/ul/li/span[text()='公司地址：']/following-sibling::*/text()")
         item_loader.add_value('created_at', time.strftime('%Y-%m-%d %H:%M:%S'))
+        
+        job_md5=name+com_name+publist_date
+        item_loader.add_value('md5',job_md5)
         
         item=item_loader.load_item()
         yield item
