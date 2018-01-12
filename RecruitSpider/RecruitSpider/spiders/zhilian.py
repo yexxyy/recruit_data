@@ -21,8 +21,8 @@ class ZhilianSpider(scrapy.Spider):
     # start_urls = ['http://jobs.zhaopin.com/']
     
     custom_settings = {
-        # 'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
-        
+        # 保存爬虫状态
+        'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
     }
     cities = tool.get_city_pinyin()
     current_city_index = 0
@@ -30,7 +30,9 @@ class ZhilianSpider(scrapy.Spider):
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
     requested_job_url_md5=tool.get_job_url_md5()
-
+    
+    
+    
     # 爬虫信号绑定
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -80,7 +82,6 @@ class ZhilianSpider(scrapy.Spider):
 
     
     def parse_job_detail(self,response):
-        print(response)
         
         # zhilian_job
         item_loader=BaseItemLoader(item=RecruitspiderItem(),response=response)
@@ -112,7 +113,7 @@ class ZhilianSpider(scrapy.Spider):
         item_loader.add_xpath('com_address',"//div[@class='company-box']/ul/li/span[text()='公司地址：']/following-sibling::*/text()")
         item_loader.add_value('created_at', time.strftime('%Y-%m-%d %H:%M:%S'))
         
-        md5_origin=item_loader.get_output_value('name')+item_loader.get_output_value('com_name')+item_loader.get_output_value('publish_date')
+        md5_origin='{}{}{}'.format(item_loader.get_output_value('name'),item_loader.get_output_value('com_name'),item_loader.get_output_value('publish_date'))
         item_loader.add_value('md5',tool.get_md5(md5_origin))
         
         item=item_loader.load_item()

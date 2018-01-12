@@ -27,6 +27,11 @@ def get_job_url_md5():
 		processed_result.append(get_md5(item))
 	return processed_result
 
+def get_company_md5():
+	sql_str="SELECT com_md5 FROM zhilian_company"
+	result=execute_sql(sql_str)
+	return result
+
 def execute_sql(sql_str):
 	engine = create_engine('mysql://{}:{}@{}:3306/{}?charset=utf8'.format(settings.MYSQL_USER,settings.MYSQL_PASSWORD,settings.MYSQL_HOST,settings.MYSQL_DBNAME), echo=False)
 	conn = engine.connect()

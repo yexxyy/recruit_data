@@ -7,9 +7,10 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, MapCompose,Join
+from scrapy.loader.processors import TakeFirst, MapCompose, Join
 import re
 from RecruitSpider.tools import tool
+
 
 class BaseItemLoader(ItemLoader):
 	default_output_processor = TakeFirst()
@@ -21,22 +22,26 @@ class BaseItemLoader(ItemLoader):
 			item[field_name] = value
 		return item
 
+
 def remove_blank(value):
-	return re.sub(r'\s+','',value)
+	return re.sub(r'\s+', '', value)
 
 
 def get_salary_high(value):
-	#'8001-10000元/月\xa0',
+	# '8001-10000元/月\xa0',
 	m = re.match('(\d+)-(\d+)', value)
-	if m:return m.group(2)
-	
-	
+	if m:
+		return m.group(2)
+
+
 def get_salary_low(value):
 	m = re.match('(\d+)-(\d+)', value)
-	if m: return m.group(1)
+	if m:
+		return m.group(1)
+
 
 def handle_recruit_num(value):
-	m=re.match(r"\d+",value)
+	m = re.match(r"\d+", value)
 	return m.group(0) if m else 0
 
 
@@ -44,46 +49,29 @@ class RecruitspiderItem(scrapy.Item):
 	# zhilian_job
 	name = scrapy.Field()
 	city = scrapy.Field()
-	salary_low = scrapy.Field(
-		input_processor=MapCompose(get_salary_low)
-	)
-	salary_high = scrapy.Field(
-		input_processor=MapCompose(get_salary_high)
-	)
-	location = scrapy.Field(
-		input_processor=MapCompose(remove_blank)
-	)
+	salary_low = scrapy.Field(input_processor=MapCompose(get_salary_low))
+	salary_high = scrapy.Field(input_processor=MapCompose(get_salary_high))
+	location = scrapy.Field(input_processor=MapCompose(remove_blank))
 	publish_date = scrapy.Field()
 	label = scrapy.Field()
 	nature = scrapy.Field()
 	work_years = scrapy.Field()
 	education = scrapy.Field()
-	recruit_num = scrapy.Field(
-		input_processor=MapCompose(handle_recruit_num)
-	)
+	recruit_num = scrapy.Field(input_processor=MapCompose(handle_recruit_num))
 	category = scrapy.Field()
 	url = scrapy.Field()
-	md5= scrapy.Field(
-		input_processor=MapCompose()
-	)
-	content=scrapy.Field(
-		input_processor=MapCompose(remove_blank)
-	)
+	md5 = scrapy.Field(input_processor=MapCompose(tool.get_md5))
+	content = scrapy.Field(input_processor=MapCompose(remove_blank))
 	
 	# zhilian_company
-	com_md5 = scrapy.Field()
-	com_name = scrapy.Field(
-		input_processor=MapCompose(tool.get_md5)
-	)
+	com_md5 = scrapy.Field(input_processor=MapCompose(tool.get_md5))
+	com_name = scrapy.Field()
 	com_scale = scrapy.Field()
 	com_nature = scrapy.Field()
 	com_logo = scrapy.Field()
 	com_website = scrapy.Field()
 	com_industry = scrapy.Field()
-	com_address = scrapy.Field(
-		input_processor=MapCompose(remove_blank)
-	)
-	
+	com_address = scrapy.Field(input_processor=MapCompose(remove_blank))
 	created_at = scrapy.Field()
 	
 	def zhilian_com_insert_sql(self):
