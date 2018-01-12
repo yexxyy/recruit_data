@@ -9,29 +9,22 @@ import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, MapCompose,Join
 import re
-from RecruitSpider.tools import tool
+
 
 class BaseItemLoader(ItemLoader):
 	default_output_processor = TakeFirst()
 	
 	def load_item(self):
 		item = self.item
-		for field_name in tuple(self._values):
+		for field_name in tuple(item.fields):
 			value = self.get_output_value(field_name)
-			if value is not None:
-				item[field_name] = value
-		
+			item[field_name] = value
 		return item
-
-
-def get_null_value(value):
-	return value if value else 'NULL'
 
 def remove_blank(value):
 	return re.sub(r'\s+','',value)
 
 
-	
 def get_salary_high(value):
 	#'8001-10000元/月\xa0',
 	m=re.match('(\d+)-(\d+)',value)
@@ -47,6 +40,8 @@ def handle_recruit_num(value):
 		return m.group(0)
 	else:
 		return 0
+
+
 
 
 
@@ -81,21 +76,15 @@ class RecruitspiderItem(scrapy.Item):
 	)
 	
 	# zhilian_company
-	com_md5 = scrapy.Field(
-		input_processor=MapCompose(tool.get_md5)
-	)
+	com_md5 = scrapy.Field()
 	com_name = scrapy.Field()
 	com_scale = scrapy.Field()
 	com_nature = scrapy.Field()
-	com_logo = scrapy.Field(
-		input_processor=MapCompose(get_null_value)
-	)
-	com_website = scrapy.Field(
-		input_processor=MapCompose(get_null_value)
-	)
+	com_logo = scrapy.Field()
+	com_website = scrapy.Field()
 	com_industry = scrapy.Field()
 	com_address = scrapy.Field(
-		input_processor=MapCompose(remove_blank,get_null_value)
+		input_processor=MapCompose(remove_blank)
 	)
 	
 	created_at = scrapy.Field()
