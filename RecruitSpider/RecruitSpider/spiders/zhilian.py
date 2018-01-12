@@ -86,7 +86,7 @@ class ZhilianSpider(scrapy.Spider):
         item_loader=BaseItemLoader(item=RecruitspiderItem(),response=response)
         item_loader.add_xpath('name',"//div[@class='top-fixed-box']/div/div/h1/text()")
         label=response.xpath("//div[@class='top-fixed-box']//div[@class='welfare-tab-box']/span/text()").extract()
-        item_loader.add_value('label',','.join(label) if label else "NULL")
+        item_loader.add_value('label',','.join(label) if label else None)
         item_loader.add_xpath('salary_low',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
         item_loader.add_xpath('salary_high',"//ul/li/span[text()='职位月薪：']/following-sibling::*/text()")
         item_loader.add_xpath('city',"//ul/li/span[text()='工作地点：']/following-sibling::*/a/text()")
