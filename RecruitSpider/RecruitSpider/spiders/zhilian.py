@@ -18,7 +18,7 @@ class ZhilianSpider(scrapy.Spider):
     allow_domains = ['jobs.zhaopin.com']
     base_url = 'http://jobs.zhaopin.com'
     # start_urls = ['http://jobs.zhaopin.com/']
-
+    
     custom_settings = {
         # 'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
         
@@ -26,6 +26,9 @@ class ZhilianSpider(scrapy.Spider):
     cities = tool.get_city_pinyin()
     current_city_index = 0
     current_page = 1
+    #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
+    #scrapy启动之后已经爬取的链接通过scrapy自身去重
+    requested_job_url_md5=tool.get_job_url_md5()
 
     # 爬虫信号绑定
     @classmethod
@@ -71,7 +74,8 @@ class ZhilianSpider(scrapy.Spider):
         job_list=response.xpath("//ul[contains(@class,'search_list')]/li/div[contains(@class,'details_container')]")
         for job_node in job_list:
             job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
-            yield Request(url=job_url, callback=self.parse_job_detail)
+            if not tool.get_md5(job_url) in self.requested_job_url_md5:
+                yield Request(url=job_url, callback=self.parse_job_detail)
 
     
 
@@ -124,4 +128,4 @@ class ZhilianSpider(scrapy.Spider):
 
 
 
-
+    

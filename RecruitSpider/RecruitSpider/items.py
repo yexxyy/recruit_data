@@ -8,10 +8,20 @@
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, MapCompose,Join
-import re,hashlib
+import re
+from RecruitSpider.tools import tool
 
 class BaseItemLoader(ItemLoader):
 	default_output_processor = TakeFirst()
+	
+	def load_item(self):
+		item = self.item
+		for field_name in tuple(self._values):
+			value = self.get_output_value(field_name)
+			if value is not None:
+				item[field_name] = value
+		
+		return item
 
 
 def get_null_value(value):
@@ -20,13 +30,7 @@ def get_null_value(value):
 def remove_blank(value):
 	return re.sub(r'\s+','',value)
 
-def get_md5(value):
-	print(value)
-	if isinstance(value,str):
-		value=value.encode('utf-8')
-		md5_obj=hashlib.md5()
-		md5_obj.update(value)
-		return md5_obj.hexdigest()
+
 	
 def get_salary_high(value):
 	#'8001-10000元/月\xa0',
@@ -43,6 +47,8 @@ def handle_recruit_num(value):
 		return m.group(0)
 	else:
 		return 0
+
+
 
 class RecruitspiderItem(scrapy.Item):
 	# zhilian_job
@@ -68,7 +74,7 @@ class RecruitspiderItem(scrapy.Item):
 	category = scrapy.Field()
 	url = scrapy.Field()
 	md5= scrapy.Field(
-		input_processor=MapCompose(get_md5)
+		input_processor=MapCompose()
 	)
 	content=scrapy.Field(
 		input_processor=MapCompose(remove_blank)
@@ -76,7 +82,7 @@ class RecruitspiderItem(scrapy.Item):
 	
 	# zhilian_company
 	com_md5 = scrapy.Field(
-		input_processor=MapCompose(get_md5)
+		input_processor=MapCompose(tool.get_md5)
 	)
 	com_name = scrapy.Field()
 	com_scale = scrapy.Field()

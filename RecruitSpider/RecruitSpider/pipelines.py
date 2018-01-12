@@ -30,6 +30,7 @@ class RecruitspiderPipeline(object):
 
     def process_item(self, item, spider):
         print(item)
+        
         return item
 
     def open_spider(self, spider):
@@ -46,7 +47,7 @@ class RecruitspiderPipeline(object):
 
 class ZhilianspiderPipeline(RecruitspiderPipeline):
     def process_item(self, item, spider):
-        print(item)
+        super().process_item(item,spider)
         query_company=self.dbpool.runInteraction(self.do_insert_company,item)
         query_company.addErrback(self.handle_error,item,spider)
         query_job=self.dbpool.runInteraction(self.do_insert_job,item)
