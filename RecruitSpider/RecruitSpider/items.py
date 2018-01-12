@@ -9,7 +9,7 @@ import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, MapCompose,Join
 import re
-
+from RecruitSpider.tools import tool
 
 class BaseItemLoader(ItemLoader):
 	default_output_processor = TakeFirst()
@@ -27,22 +27,17 @@ def remove_blank(value):
 
 def get_salary_high(value):
 	#'8001-10000元/月\xa0',
-	m=re.match('(\d+)-(\d+)',value)
-	return m.group(2)
-
+	m = re.match('(\d+)-(\d+)', value)
+	if m:return m.group(2)
+	
+	
 def get_salary_low(value):
-	m=re.match('(\d+)-(\d+)',value)
-	return m.group(1)
+	m = re.match('(\d+)-(\d+)', value)
+	if m: return m.group(1)
 
 def handle_recruit_num(value):
 	m=re.match(r"\d+",value)
-	if m:
-		return m.group(0)
-	else:
-		return 0
-
-
-
+	return m.group(0) if m else 0
 
 
 class RecruitspiderItem(scrapy.Item):
@@ -77,7 +72,9 @@ class RecruitspiderItem(scrapy.Item):
 	
 	# zhilian_company
 	com_md5 = scrapy.Field()
-	com_name = scrapy.Field()
+	com_name = scrapy.Field(
+		input_processor=MapCompose(tool.get_md5)
+	)
 	com_scale = scrapy.Field()
 	com_nature = scrapy.Field()
 	com_logo = scrapy.Field()
