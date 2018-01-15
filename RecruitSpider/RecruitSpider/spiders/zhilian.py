@@ -23,7 +23,7 @@ class ZhilianSpider(scrapy.Spider):
         'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
     }
     cities = tool.get_city_pinyin()
-    current_city_index = 0
+    current_city_index = 15
     current_page = 1
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
@@ -62,6 +62,7 @@ class ZhilianSpider(scrapy.Spider):
     def start_requests(self):
         start_url = urllib_parse.urljoin(self.base_url,
                                          self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
+        print(start_url)
         yield Request(url=start_url, callback=self.parse,headers=self.headers)
 
     def parse(self, response):
@@ -71,6 +72,10 @@ class ZhilianSpider(scrapy.Spider):
         path_list=parse_obj.path.split('/')
         self.current_city_index=self.cities.index(path_list[1])
         self.current_page=int(path_list[2][1:])
+        
+        if not str(response.status).startswith('2'):
+            self.current_page+=1
+            time.sleep(2)
         # 当前城市已完毕，下一个城市
         if self.current_page == 100:
             self.current_page = 1
