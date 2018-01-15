@@ -3,16 +3,14 @@
 # Created by yetongxue on 2017/12/29
 
 
-import scrapy
 from scrapy.http import Request
 from scrapy import signals
-from scrapy.exceptions import CloseSpider
-from RecruitSpider.tools import tool
 from urllib.parse import urlparse
 from urllib import parse as urllib_parse
 from RecruitSpider.items import *
-import time
+import time,os
 from RecruitSpider.tools import tool
+
 
 class ZhilianSpider(scrapy.Spider):
     name = 'zhilian'
@@ -30,8 +28,20 @@ class ZhilianSpider(scrapy.Spider):
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
     requested_job_url_md5=tool.get_job_url_md5()
+
+    headers = {
+        'Host'                     : 'jobs.zhaopin.com',
+        'Connection'               : 'keep-alive',
+        'Cache-Control'            : 'max-age=0',
+        'Upgrade-Insecure-Requests': 1,
+        'User-Agent'               : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+        'Accept'                   : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding'          : 'gzip, deflate',
+        'Accept-Language'          : 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Cookie'                   : '__utma=269921210.890444320.1515986456.1515986456.1515986456.1; __utmc=269921210; __utmz=269921210.1515986456.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt=1; dywea=95841923.3320700297463268000.1515986456.1515986456.1515986456.1; dywec=95841923; dywez=95841923.1515986456.1.1.dywecsr=(direct)|dyweccn=(direct)|dywecmd=(none)|dywectr=undefined; _jzqa=1.2610123500841465300.1515986456.1515986456.1515986456.1; _jzqc=1; _jzqckmp=1; urlfrom=121126445; urlfrom2=121126445; adfcid=none; adfcid2=none; adfbid=0; adfbid2=0; firstchannelurl=https%3A//passport.zhaopin.com/account/login%3FBkUrl%3Dhttp%253a%252f%252fi.zhaopin.com%252f; pcc=r=677854105&t=0; lastchannelurl=https%3A//passport.zhaopin.com/account/login%3FBkUrl%3Dhttp%253a%252f%252fi.zhaopin.com%252f; dywem=95841923.y; userphoto=; userwork=5; bindmob=0; rinfo=JM037508819R90500000000_1; monitorlogin=Y; NTKF_T2D_CLIENTID=guestAEBBD54F-792E-7A12-3F5C-F7D5B92EBB48; nTalk_CACHE_DATA={uid:kf_9051_ISME9754_603750881,tid:1515986467118692}; Hm_lvt_38ba284938d5eddca645bb5e02a02006=1515985115; usermob=5E6F466B566952685377446F59735F6451665C6A41769; JSweixinNum=2; LastCity=%e6%88%90%e9%83%bd; LastCity%5Fid=801; loginreleased=1; dyweb=95841923.7.10.1515986456; __utmb=269921210.7.10.1515986456; Hm_lpvt_38ba284938d5eddca645bb5e02a02006=1515986741; bdshare_firstime=1515986741523; _qzja=1.1506218625.1515986741632.1515986741632.1515986741632.1515986741632.1515986741632.0.0.0.1.1; _qzjc=1; _qzjto=1.1.0; _jzqb=1.4.10.1515986456.1; _qzjb=1.1515986741632.1.0.0.0; stayTimeCookie=1515986742138; referrerUrl=http%3A//jobs.zhaopin.com/'
+    }
     
-    
+    requested_url_list_file=open(os.path.join(custom_settings.get('JOBDIR'),'requested_url.txt'),'a')
     
     # 爬虫信号绑定
     @classmethod
@@ -42,6 +52,7 @@ class ZhilianSpider(scrapy.Spider):
         return spider
 
     def spider_close(self):
+        self.requested_url_list_file.close()
         print('爬虫已关闭')
 
     def spider_open(self):
@@ -51,9 +62,10 @@ class ZhilianSpider(scrapy.Spider):
     def start_requests(self):
         start_url = urllib_parse.urljoin(self.base_url,
                                          self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-        yield Request(url=start_url, callback=self.parse)
+        yield Request(url=start_url, callback=self.parse,headers=self.headers)
 
     def parse(self, response):
+        self.requested_url_list_file.write('{}\n'.format(response))
         print(response)
         parse_obj=urlparse(response.url)
         path_list=parse_obj.path.split('/')
@@ -66,19 +78,19 @@ class ZhilianSpider(scrapy.Spider):
             if self.current_city_index < len(self.cities):
                 temp_url = urllib_parse.urljoin(self.base_url,
                                                 self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-                yield Request(url=temp_url, callback=self.parse)
+                yield Request(url=temp_url, callback=self.parse,headers=self.headers)
         else:
             self.current_page += 1
             temp_url = urllib_parse.urljoin(self.base_url,
                                             self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-            yield Request(url=temp_url, callback=self.parse)
+            yield Request(url=temp_url, callback=self.parse,headers=self.headers)
         # raise CloseSpider(reason='智联爬取完毕...')
         #解析list
         job_list=response.xpath("//ul[contains(@class,'search_list')]/li/div[contains(@class,'details_container')]")
         for job_node in job_list:
             job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
             if not tool.get_md5(job_url) in self.requested_job_url_md5:
-                yield Request(url=job_url, callback=self.parse_job_detail)
+                yield Request(url=job_url, callback=self.parse_job_detail,headers=self.headers)
 
     
     def parse_job_detail(self,response):

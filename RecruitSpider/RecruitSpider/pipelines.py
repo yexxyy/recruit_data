@@ -18,7 +18,7 @@ class RecruitspiderPipeline(object):
     # 读取mysql中的com_md5存到redis
     # 用于item存储是去重
     COM_MD5_SET = 'COM_MD5_SET'
-    redis_zhilian = redis.Redis(host='127.0.0.1', port=6379, password='qwerasdf', db=1, decode_responses=True)
+    redis_zhilian = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
     redis_zhilian.delete(COM_MD5_SET)
     for com_md5 in tool.get_company_md5():
         redis_zhilian.sadd(COM_MD5_SET, com_md5)
