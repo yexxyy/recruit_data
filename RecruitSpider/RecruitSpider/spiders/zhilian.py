@@ -18,15 +18,12 @@ class ZhilianSpider(scrapy.Spider):
     name = 'zhilian'
     allow_domains = ['jobs.zhaopin.com']
     base_url = 'http://jobs.zhaopin.com'
-    # start_urls = ['http://jobs.zhaopin.com/']
-    
     custom_settings = {
         # 保存爬虫状态
-        'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
+        'JOBDIR'             : '/Users/yexianyong/Desktop/spider/job_dir/zhilian',
+        'HTTPERROR_ALLOW_ALL': True,
     }
     cities = tool.get_city_pinyin()
-    current_city_index = 8
-    current_page = 87
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
     requested_job_url_md5=tool.get_job_url_md5()
@@ -44,13 +41,12 @@ class ZhilianSpider(scrapy.Spider):
     }
     
     requested_url_list_file=open(os.path.join(custom_settings.get('JOBDIR'),'requested_url.txt'),'a')
-    
-    # 爬虫信号绑定
+
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(ZhilianSpider, cls).from_crawler(crawler, *args, **kwargs)
-        crawler.signals.connect(spider.spider_close, signals.spider_closed)
         crawler.signals.connect(spider.spider_open, signals.spider_opened)
+        crawler.signals.connect(spider.spider_close, signals.spider_closed)
         return spider
 
     def spider_close(self):
@@ -62,53 +58,34 @@ class ZhilianSpider(scrapy.Spider):
 
 
     def start_requests(self):
-        start_url = urllib_parse.urljoin(self.base_url,
-                                         self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-        print(start_url)
-        yield Request(url=start_url, callback=self.parse,headers=self.headers)
+        for city in self.cities:
+            self.requested_url_list_file.write('{}\n'.format(city))
+            print(city)
+            for index in range(100):
+                temp_url = urllib_parse.urljoin(self.base_url,
+                        city + ('/p{}/'.format(index+1)))
+                yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error)
+
+        
 
     def parse(self, response):
         self.requested_url_list_file.write('{}\n'.format(response))
         print(response)
-        parse_obj=urlparse(response.url)
-        path_list=parse_obj.path.split('/')
-        self.current_city_index=self.cities.index(path_list[1])
-        self.current_page=int(path_list[2][1:])
-        
-        # 当前城市已完毕，下一个城市
-        if self.current_page == 100:
-            self.current_page = 1
-            self.current_city_index += 1
-            if self.current_city_index < len(self.cities):
-                temp_url = urllib_parse.urljoin(self.base_url,
-                                                self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-                yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error,priority=1)
-        else:
-            self.current_page += 1
-            temp_url = urllib_parse.urljoin(self.base_url,
-                                            self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-            yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error,priority=1)
         # raise CloseSpider(reason='智联爬取完毕...')
         #解析list
-        if str(response.status).startswith('2'):
-            job_list=response.xpath("//ul[contains(@class,'search_list')]/li/div[contains(@class,'details_container')]")
-            for job_node in job_list:
-                job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
-                if not tool.get_md5(job_url) in self.requested_job_url_md5:
-                    yield Request(url=job_url, callback=self.parse_job_detail,headers=self.headers,errback=self.handle_error)
-    
-
+        job_list = response.xpath("//ul[contains(@class,'search_list')]/li/div[contains(@class,'details_container')]")
+        for job_node in job_list:
+            job_url = job_node.xpath("span[@class='post']/a/@href").extract_first()
+            if not tool.get_md5(job_url) in self.requested_job_url_md5:
+                yield Request(url=job_url, callback=self.parse_job_detail, headers=self.headers,
+                        errback=self.handle_error, priority=1)
+            
     
     def handle_error(self,failure):
-        self.logger.error(repr(failure))
-        request = failure.request
-        m = re.match(r'http://jobs.zhaopin.com/[a-z]+/p\d+/', request.url)
-        if m:
-            response = Response(url=request.url,status=404)
-            self.parse(response)
+        self.logger.error(failure)
 
     def parse_job_detail(self,response):
-        
+        print(response.url)
         # zhilian_job
         item_loader=BaseItemLoader(item=RecruitspiderItem(),response=response)
         item_loader.add_xpath('name',"//div[@class='top-fixed-box']/div/div/h1/text()")
