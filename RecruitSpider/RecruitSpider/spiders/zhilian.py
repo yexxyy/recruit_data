@@ -12,7 +12,7 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 
 from RecruitSpider.items import *
-import time,os
+import time,os,re
 from RecruitSpider.tools import tool
 
 
@@ -27,8 +27,8 @@ class ZhilianSpider(scrapy.Spider):
         'JOBDIR':'/Users/yexianyong/Desktop/spider/job_dir/zhilian'
     }
     cities = tool.get_city_pinyin()
-    current_city_index = 7
-    current_page = 67
+    current_city_index = 8
+    current_page = 62
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
     requested_job_url_md5=tool.get_job_url_md5()
@@ -97,7 +97,7 @@ class ZhilianSpider(scrapy.Spider):
             for job_node in job_list:
                 job_url=job_node.xpath("span[@class='post']/a/@href").extract_first()
                 if not tool.get_md5(job_url) in self.requested_job_url_md5:
-                    yield Request(url=job_url, callback=self.parse_job_detail,headers=self.headers)
+                    yield Request(url=job_url, callback=self.parse_job_detail,headers=self.headers,errback=self.handle_error)
     
 
     
@@ -105,8 +105,11 @@ class ZhilianSpider(scrapy.Spider):
         self.logger.error(repr(failure))
         if failure.check(TimeoutError):
             request=failure.request
-            response=Request(url=request.url)
-            self.parse(response)
+            m=re.match(r'http://jobs.zhaopin.com/[a-z]+/p\d+/',request.url)
+            if m:
+                response=Request(url=request.url)
+                self.parse(response)
+            
             
             
     def parse_job_detail(self,response):
