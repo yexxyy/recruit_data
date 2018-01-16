@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by yetongxue on 2017/12/29
-
-
-from scrapy.http import Request
+from scrapy.http import Request,Response
 from scrapy import signals
 from urllib.parse import urlparse
 from urllib import parse as urllib_parse
@@ -28,7 +26,7 @@ class ZhilianSpider(scrapy.Spider):
     }
     cities = tool.get_city_pinyin()
     current_city_index = 8
-    current_page = 62
+    current_page = 87
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
     requested_job_url_md5=tool.get_job_url_md5()
@@ -84,12 +82,12 @@ class ZhilianSpider(scrapy.Spider):
             if self.current_city_index < len(self.cities):
                 temp_url = urllib_parse.urljoin(self.base_url,
                                                 self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-                yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error)
+                yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error,priority=1)
         else:
             self.current_page += 1
             temp_url = urllib_parse.urljoin(self.base_url,
                                             self.cities[self.current_city_index] + ('/p{}/'.format(self.current_page)))
-            yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error)
+            yield Request(url=temp_url, callback=self.parse, headers=self.headers, errback=self.handle_error,priority=1)
         # raise CloseSpider(reason='智联爬取完毕...')
         #解析list
         if str(response.status).startswith('2'):
@@ -103,15 +101,12 @@ class ZhilianSpider(scrapy.Spider):
     
     def handle_error(self,failure):
         self.logger.error(repr(failure))
-        if failure.check(TimeoutError):
-            request=failure.request
-            m=re.match(r'http://jobs.zhaopin.com/[a-z]+/p\d+/',request.url)
-            if m:
-                response=Request(url=request.url)
-                self.parse(response)
-            
-            
-            
+        request = failure.request
+        m = re.match(r'http://jobs.zhaopin.com/[a-z]+/p\d+/', request.url)
+        if m:
+            response = Response(url=request.url,status=404)
+            self.parse(response)
+
     def parse_job_detail(self,response):
         
         # zhilian_job
