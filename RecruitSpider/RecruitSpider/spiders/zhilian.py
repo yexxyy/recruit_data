@@ -3,14 +3,14 @@
 # Created by yetongxue on 2017/12/29
 from scrapy.http import Request,Response
 from scrapy import signals
+from scrapy.conf import settings
 from urllib.parse import urlparse
 from urllib import parse as urllib_parse
-
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 
 from RecruitSpider.items import *
-import time,os,re
+import time,os
 from RecruitSpider.tools import tool
 
 
@@ -18,11 +18,7 @@ class ZhilianSpider(scrapy.Spider):
     name = 'zhilian'
     allow_domains = ['jobs.zhaopin.com']
     base_url = 'http://jobs.zhaopin.com'
-    custom_settings = {
-        # 保存爬虫状态
-        'JOBDIR'             : '/Users/yexianyong/Desktop/spider/job_dir/zhilian',
-        'HTTPERROR_ALLOW_ALL': True,
-    }
+    
     cities = tool.get_city_pinyin()
     #从数据库中读取现有的job_url,然后在发起job detail页面的请求时进行一个判断是否已经请求过。
     #scrapy启动之后已经爬取的链接通过scrapy自身去重
@@ -40,8 +36,10 @@ class ZhilianSpider(scrapy.Spider):
         'Cookie'                   : '__utma=269921210.890444320.1515986456.1515986456.1515986456.1; __utmc=269921210; __utmz=269921210.1515986456.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt=1; dywea=95841923.3320700297463268000.1515986456.1515986456.1515986456.1; dywec=95841923; dywez=95841923.1515986456.1.1.dywecsr=(direct)|dyweccn=(direct)|dywecmd=(none)|dywectr=undefined; _jzqa=1.2610123500841465300.1515986456.1515986456.1515986456.1; _jzqc=1; _jzqckmp=1; urlfrom=121126445; urlfrom2=121126445; adfcid=none; adfcid2=none; adfbid=0; adfbid2=0; firstchannelurl=https%3A//passport.zhaopin.com/account/login%3FBkUrl%3Dhttp%253a%252f%252fi.zhaopin.com%252f; pcc=r=677854105&t=0; lastchannelurl=https%3A//passport.zhaopin.com/account/login%3FBkUrl%3Dhttp%253a%252f%252fi.zhaopin.com%252f; dywem=95841923.y; userphoto=; userwork=5; bindmob=0; rinfo=JM037508819R90500000000_1; monitorlogin=Y; NTKF_T2D_CLIENTID=guestAEBBD54F-792E-7A12-3F5C-F7D5B92EBB48; nTalk_CACHE_DATA={uid:kf_9051_ISME9754_603750881,tid:1515986467118692}; Hm_lvt_38ba284938d5eddca645bb5e02a02006=1515985115; usermob=5E6F466B566952685377446F59735F6451665C6A41769; JSweixinNum=2; LastCity=%e6%88%90%e9%83%bd; LastCity%5Fid=801; loginreleased=1; dyweb=95841923.7.10.1515986456; __utmb=269921210.7.10.1515986456; Hm_lpvt_38ba284938d5eddca645bb5e02a02006=1515986741; bdshare_firstime=1515986741523; _qzja=1.1506218625.1515986741632.1515986741632.1515986741632.1515986741632.1515986741632.0.0.0.1.1; _qzjc=1; _qzjto=1.1.0; _jzqb=1.4.10.1515986456.1; _qzjb=1.1515986741632.1.0.0.0; stayTimeCookie=1515986742138; referrerUrl=http%3A//jobs.zhaopin.com/'
     }
     
-    requested_url_list_file=open(os.path.join(custom_settings.get('JOBDIR'),'requested_url.txt'),'a')
-
+    requested_url_list_file=open(os.path.join(settings.get('JOBDIR'),'requested_url.txt'),'a')
+    
+    
+    
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(ZhilianSpider, cls).from_crawler(crawler, *args, **kwargs)
@@ -58,7 +56,7 @@ class ZhilianSpider(scrapy.Spider):
 
 
     def start_requests(self):
-        for city in self.cities:
+        for city in self.cities[24:]:
             self.requested_url_list_file.write('{}\n'.format(city))
             print(city)
             for index in range(100):
