@@ -4,7 +4,6 @@
 #This shell script is used to start scrapy process.
 #When the process got down, this script will restart it.
 
-log_file='start_zhilian.log'
 
 TIMESTAMP(){
     echo $(date "+%Y-%m-%d %H:%M:%S")
