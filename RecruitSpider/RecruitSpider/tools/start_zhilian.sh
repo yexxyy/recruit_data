@@ -15,7 +15,7 @@ stop_process_if_running(){
     running_process_num=$(ps -ef | grep $1 | grep -v grep | grep -v start_zhilian | wc -l)
     if [ $running_process_num -gt 0 ];then
         echo "$(TIMESTAMP) $1 is running..."
-        ps -ef | grep $1 | grep -v grep | awk '{ print $2 }' | xargs kill -9
+        ps -ef | grep $1 | grep -v grep | grep -v start_zhilian | awk '{ print $2 }' | xargs kill -9
         if [ $? -eq 0 ]; then
             echo "$1 is killed successfully."
         fi
