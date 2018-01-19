@@ -41,7 +41,7 @@ start_process(){
         cd $2
         echo "Current workdir is $PWD"
 
-        nohup scrapy crawl zhilian >> ./nohup.out &
+        nohup scrapy crawl zhilian >> ./zhilian.log &
         if [ $? -eq 0 ];then
             echo "$(TIMESTAMP) $1 starts successfully."
         else
