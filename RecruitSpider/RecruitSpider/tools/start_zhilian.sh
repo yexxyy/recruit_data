@@ -12,10 +12,10 @@ TIMESTAMP(){
 stop_process_if_running(){
     # $1 -> process name
 
-    running_process_num=$(ps -ef | grep $1 | grep -v grep | grep -v start_zhilian | wc -l)
+    running_process_num=$(ps -ef | grep $1 | grep -v grep | wc -l)
     if [ $running_process_num -gt 0 ];then
         echo "$(TIMESTAMP) $1 is running..."
-        ps -ef | grep $1 | grep -v grep | grep -v start_zhilian | awk '{ print $2 }' | xargs kill -9
+        ps -ef | grep $1 | grep -v grep | awk '{ print $2 }' | xargs kill -9
         if [ $? -eq 0 ]; then
             echo "$1 is killed successfully."
         fi
@@ -27,7 +27,7 @@ stop_process_if_running(){
 start_process(){
     # $1 -> process name
     # $2 -> project dir
-    running_process_num=$(ps -ef | grep $1 | grep -v grep | grep -v start_zhilian | wc -l)
+    running_process_num=$(ps -ef | grep $1 | grep -v grep | wc -l)
     if [ $running_process_num -gt 0 ];then
         echo "$(TIMESTAMP) $1 is running, no need to restart..."
     else
@@ -51,7 +51,7 @@ start_process(){
 }
 
 
-process_name="zhilian"
+process_name="crawl"
 project_dir=/Users/yexianyong/Desktop/spider/recruit_data/RecruitSpider
 
 
