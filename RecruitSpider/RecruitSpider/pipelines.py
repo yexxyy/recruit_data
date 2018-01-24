@@ -61,7 +61,8 @@ class ZhilianspiderPipeline(RecruitspiderPipeline):
     def process_item(self, item, spider):
         super().process_item(item,spider)
         com_md5=item['com_md5']
-        if com_md5 is None:
+        if (com_md5 is None) or \
+                (item['salary_high'] is None or item['salary_low'] is None):
             raise DropItem(item)
         if com_md5 not in self.redis_zhilian.smembers(self.COM_MD5_SET):
             query_company = self.dbpool.runInteraction(self.do_insert_company, item)
